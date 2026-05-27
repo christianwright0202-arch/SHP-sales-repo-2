@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sidecar Sales Hub</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%;min-height:100%}
+:root{
+  --navy:#0F1F3D;
+  --navy-light:#1A3260;
+  --navy-mid:#243F6B;
+  --gold:#C9A84C;
+  --gold-light:#E4C97A;
+  --gold-pale:#FBF5E6;
+  --gold-border:#E8D9A8;
+  --cream:#FAFAF5;
+  --cream-dark:#F2EFE4;
+  --cream-mid:#E8E4D8;
+  --text:#1C1C1A;
+  --text-mid:#4A4A45;
+  --text-muted:#888780;
+  --white:#FFFFFF;
+  --success:#10B981;
+  --warning:#F59E0B;
+  --danger:#EF4444;
+  --info:#3B82F6;
+  --purple:#8B5CF6;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);-webkit-font-smoothing:antialiased}
+input,textarea,select,button{font-family:'DM Sans',sans-serif}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold)!important;box-shadow:0 0 0 2px rgba(201,168,76,0.2)}
+button:focus{outline:none}
+.serif{font-family:'DM Serif Display',serif}
+.btn{cursor:pointer;font-size:13px;font-weight:500;border-radius:6px;border:none;padding:8px 16px;transition:all .15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:hover{background:var(--navy-light)}
+.btn-primary:disabled{background:#aaa;cursor:not-allowed}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-gold:hover{background:var(--gold-light)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--cream-mid)}
+.btn-outline:hover{background:var(--cream-dark)}
+.btn-ghost{background:transparent;color:var(--text-muted);border:none;padding:6px 10px}
+.btn-ghost:hover{background:var(--cream-dark);color:var(--text)}
+.nav-tab{cursor:pointer;font-size:13px;font-weight:500;padding:8px 16px;border-radius:6px;color:rgba(255,255,255,0.45);transition:all .15s;border:none;background:transparent}
+.nav-tab.active{background:rgba(201,168,76,0.18);color:var(--gold-light)}
+.nav-tab:not(.active):hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.75)}
+.contact-row:hover{background:var(--cream-dark);cursor:pointer}
+.kanban-col{background:var(--cream-dark);border-radius:12px;padding:12px;min-width:168px;flex:1;border:1px solid var(--cream-mid)}
+.kanban-card{background:var(--white);border:1px solid var(--cream-mid);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.kanban-card:hover{border-color:var(--gold);transform:translateY(-1px);box-shadow:0 3px 12px rgba(15,31,61,0.08)}
+.stage-pill{display:inline-block;font-size:11px;font-weight:500;padding:3px 10px;border-radius:99px}
+.modal-overlay{position:fixed;inset:0;background:rgba(10,20,45,.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.modal{background:var(--cream);border-radius:14px;padding:1.75rem;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;border:1px solid var(--cream-mid)}
+.stat-card{background:var(--white);border:1px solid var(--cream-mid);border-radius:12px;padding:1.1rem 1.4rem}
+.stat-num{font-family:'DM Serif Display',serif;font-size:36px;color:var(--navy);line-height:1}
+.stat-label{font-size:11px;color:var(--text-muted);margin-top:5px;font-weight:500;text-transform:uppercase;letter-spacing:.07em}
+label{font-size:11px;font-weight:500;color:var(--text-mid);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+input[type=text],input[type=email],input[type=tel],textarea,select{width:100%;background:var(--white);border:1px solid var(--cream-mid);border-radius:7px;padding:9px 11px;font-size:13px;color:var(--text)}
+textarea{resize:vertical;min-height:72px}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:13px}
+.form-full{margin-bottom:13px}
+.ai-output{white-space:pre-wrap;font-size:13px;line-height:1.8;color:var(--text)}
+.copy-btn{cursor:pointer;font-size:11px;padding:4px 10px;background:var(--cream-dark);color:var(--text-mid);border:1px solid var(--cream-mid);border-radius:4px}
+.copy-btn:hover{background:var(--cream-mid)}
+.prop-toggle{cursor:pointer;font-size:12px;font-weight:500;padding:6px 12px;border-radius:6px;border:1.5px solid var(--cream-mid);background:var(--white);color:var(--text-mid);transition:all .15s;user-select:none}
+.prop-toggle:hover{border-color:var(--gold);color:var(--navy)}
+.prop-toggle.selected{border-color:var(--gold);background:var(--gold-pale);color:var(--navy)}
+.section-head{font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.detail-panel{background:var(--white);border-radius:12px;border:1px solid var(--cream-mid);padding:1.25rem;margin-bottom:1rem}
+.tag{display:inline-block;font-size:11px;padding:3px 8px;border-radius:5px;background:var(--cream-dark);color:var(--text-mid);font-weight:500}
+.gold-tag{background:var(--gold-pale);color:#7A5C10;border:1px solid var(--gold-border)}
+.progress-bar-bg{background:var(--cream-dark);border-radius:99px;height:6px;overflow:hidden}
+.progress-bar-fill{background:linear-gradient(90deg,var(--gold),var(--gold-light));height:6px;border-radius:99px;transition:width .4s}
+@media(max-width:640px){.form-row{grid-template-columns:1fr}.kanban-col{min-width:145px}.hide-mobile{display:none}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo } = React;
+
+const STAGES = ["Lead","Contacted","Proposal Sent","Negotiating","Booked","Dead"];
+const STAGE_COLORS = {
+  "Lead":"#6B7280",
+  "Contacted":"#3B82F6",
+  "Proposal Sent":"#8B5CF6",
+  "Negotiating":"#F59E0B",
+  "Booked":"#10B981",
+  "Dead":"#EF4444"
+};
+const GROUP_TYPES = ["Sports team","Convention","Wedding block","Corporate","Relocation","Film crew","Government","Other"];
+const ALL_PROPERTIES = ["Hotel SOMA","The Ryan","The Rambler Inn","Kress Lofts","Dickies Arena Townhomes"];
+const SOURCES = ["CVB referral","LinkedIn","Cold call","Wedding venue referral","Sports commission","Google","Referral","Other"];
+const STORAGE_KEY = "sidecar_crm_v3";
+
+const EMPTY = {
+  id:null,name:"",title:"",company:"",email:"",phone:"",
+  groupType:"Convention",properties:[],stage:"Lead",
+  notes:"",source:"",lastContact:"",nextAction:"",
+  estimatedRooms:"",contractValue:"",followUpDate:""
+};
+
+function load() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      const data = JSON.parse(s);
+      return data.map(c => ({
+        ...c,
+        properties: c.properties || (c.property ? [c.property] : [])
+      }));
+    }
+  } catch{}
+  return [{
+    id:1,name:"Sample Contact",title:"Event Coordinator",
+    company:"Fort Worth CVB",email:"events@visitfortworth.com",
+    phone:"817-336-8791",groupType:"Convention",
+    properties:["Hotel SOMA","The Ryan"],
+    stage:"Lead",
+    notes:"Found via CVB website. They coordinate group housing referrals.",
+    source:"CVB referral",lastContact:"",
+    nextAction:"Call to introduce Sidecar as lodging partner",
+    estimatedRooms:"20-50",contractValue:"",followUpDate:""
+  }];
+}
+
+function fmt$(v) {
+  if (!v) return "";
+  const n = parseFloat(v.toString().replace(/[^0-9.]/g,""));
+  if (isNaN(n)) return v;
+  return "$" + n.toLocaleString();
+}
+
+function daysAgo(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  return Math.floor((Date.now() - d) / 86400000);
+}
+
+function PropertyToggle({values, onChange}) {
+  const toggle = (p) => {
+    if (values.includes(p)) onChange(values.filter(x=>x!==p));
+    else onChange([...values, p]);
+  };
+  return (
+    <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+      {ALL_PROPERTIES.map(p => (
+        <button key={p} type="button"
+          className={`prop-toggle ${values.includes(p)?"selected":""}`}
+          onClick={()=>toggle(p)}>
+          {p}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function WeeklyGoalBar({contacts}) {
+  const thisWeek = contacts.filter(c => {
+    if (!c.lastContact) return false;
+    const d = daysAgo(c.lastContact);
+    return d !== null && d <= 7;
+  }).length;
+  const goal = 5;
+  const pct = Math.min(100, Math.round((thisWeek/goal)*100));
+  return (
+    <div className="stat-card" style={{display:"flex",flexDirection:"column",gap:8}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+        <span className="stat-label">Weekly contacts</span>
+        <span style={{fontSize:12,color:"#C9A84C",fontWeight:500}}>{thisWeek}/{goal}</span>
+      </div>
+      <div className="progress-bar-bg"><div className="progress-bar-fill" style={{width:pct+"%"}}/></div>
+      <div style={{fontSize:11,color:"var(--text-muted)"}}>{pct<100 ? `${goal-thisWeek} more to hit your goal` : "Goal hit this week!"}</div>
+    </div>
+  );
+}
+
+function App() {
+  const [contacts, setContacts] = useState(load);
+  const [view, setView] = useState("dashboard");
+  const [sel, setSel] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [aiOut, setAiOut] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiMode, setAiMode] = useState(null);
+  const [filterStage, setFilterStage] = useState("All");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts)); } catch{}
+  }, [contacts]);
+
+  const openNew = (stage="Lead") => {
+    setEditing({...EMPTY, stage, properties:[]});
+    setShowForm(true);
+  };
+
+  const save = (c) => {
+    if (c.id) { setContacts(p => p.map(x => x.id===c.id ? c : x)); }
+    else { setContacts(p => [...p, {...c, id:Date.now()}]); }
+    setShowForm(false); setEditing(null);
+  };
+
+  const del = (id) => { setContacts(p=>p.filter(x=>x.id!==id)); setSel(null); };
+
+  const moveStage = (id, stage) => {
+    const today = new Date().toISOString().split("T")[0];
+    setContacts(p=>p.map(x=>x.id===id?{...x,stage,lastContact:today}:x));
+    if (sel?.id===id) setSel(p=>({...p,stage,lastContact:today}));
+  };
+
+  const callAI = useCallback(async (mode, contact) => {
+    setAiMode(mode); setAiLoading(true); setAiOut("");
+    const today = new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+    let prompt = "";
+
+    if (mode==="briefing") {
+      const active = contacts.filter(c=>c.stage!=="Dead"&&c.stage!=="Booked");
+      const overdue = active.filter(c=>{ const d=daysAgo(c.lastContact); return d===null||d>7; });
+      const upcoming = active.filter(c=>{ if(!c.followUpDate) return false; const diff=(new Date(c.followUpDate)-Date.now())/86400000; return diff>=0&&diff<=3; });
+      prompt = `You are a sharp sales coach texting Christian Wright. He's 24, runs Hotel SOMA (31-unit Fort Worth STR), The Ryan (Arlington near Globe Life), The Rambler Inn, Kress Lofts, and Dickies Arena Townhomes under Sidecar Suites. Building a group/convention sales pipeline with only 1-2 hrs/week. Today: ${today}. Email: christian@sidecarsuites.com.\n\nFull pipeline:\n${JSON.stringify(contacts,null,2)}\n\nOverdue (7+ days no contact): ${overdue.map(c=>c.name+" @ "+c.company).join(", ")||"none"}\nFollow-ups due in 3 days: ${upcoming.map(c=>c.name).join(", ")||"none"}\n\nGive him:\n1. Top 3 specific actions TODAY — name exact people, what to say, what channel\n2. One sentence of real encouragement (not generic)\n3. One sharp pipeline observation\n\nBe direct. Use real names. Sound like a coach texting, not a report.`;
+    } else if (mode==="email"&&contact) {
+      prompt = `Draft a follow-up sales email for Christian Wright (christian@sidecarsuites.com) at Sidecar Suites, Fort Worth TX.\n\nContact: ${contact.name}, ${contact.title} at ${contact.company}\nGroup type: ${contact.groupType}\nProperties interested in: ${(contact.properties||[]).join(", ")||"TBD"}\nStage: ${contact.stage}\nEst. rooms: ${contact.estimatedRooms||"unknown"}\nNotes: ${contact.notes||"none"}\nNext action: ${contact.nextAction||"none"}\n\nWrite a short, warm, professional follow-up. Subject line + body. Under 150 words. Human tone, not corporate. Reference the specific Sidecar property or portfolio by name. End with one clear low-friction ask. Do NOT say "I hope this email finds you well." Sign as:\nChristian Wright\nSidecar Suites | 817-xxx-xxxx`;
+    } else if (mode==="pitch"&&contact) {
+      prompt = `Christian Wright is cold calling ${contact.name}, ${contact.title} at ${contact.company}. Group type: ${contact.groupType}. Properties they may need: ${(contact.properties||[]).join(", ")||"Hotel SOMA or The Ryan"}.\n\nSidecar portfolio: Hotel SOMA (31-unit Fort Worth boutique STR), The Ryan (Arlington near Globe Life Field), The Rambler Inn (Fort Worth), Kress Lofts, Dickies Arena Townhomes.\n\nWrite a 30-second cold call pitch. Opening line, hook with one specific property detail, closing ask. 4-6 sentences. Sound like a real human — NOT a script. Tailor specifically to this person's group type.`;
+    }
+
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})
+      });
+      const data = await res.json();
+      setAiOut(data.content?.filter(b=>b.type==="text").map(b=>b.text).join("\n") || "No response.");
+    } catch(e) { setAiOut("Error reaching AI: "+e.message); }
+    setAiLoading(false);
+  }, [contacts]);
+
+  const filtered = useMemo(() => contacts.filter(c => {
+    const ms = filterStage==="All" || c.stage===filterStage;
+    const q = search.toLowerCase();
+    const mq = !q || c.name.toLowerCase().includes(q) || c.company.toLowerCase().includes(q) || (c.groupType||"").toLowerCase().includes(q);
+    return ms && mq;
+  }), [contacts, filterStage, search]);
+
+  const stats = useMemo(() => ({
+    total: contacts.filter(c=>c.stage!=="Dead").length,
+    booked: contacts.filter(c=>c.stage==="Booked").length,
+    hot: contacts.filter(c=>["Contacted","Proposal Sent","Negotiating"].includes(c.stage)).length,
+    leads: contacts.filter(c=>c.stage==="Lead").length,
+    pipeline: contacts.filter(c=>c.contractValue&&c.stage!=="Dead"&&c.stage!=="Booked").reduce((s,c)=>{
+      const n=parseFloat((c.contractValue||"0").toString().replace(/[^0-9.]/g,""));
+      return s+(isNaN(n)?0:n);
+    },0),
+    overdue: contacts.filter(c=>{
+      if(c.stage==="Dead"||c.stage==="Booked") return false;
+      const d = daysAgo(c.lastContact);
+      return d===null||d>7;
+    }).length,
+  }), [contacts]);
+
+  return (
+    <div style={{minHeight:"100vh",background:"var(--cream)"}}>
+
+      {/* Header */}
+      <header style={{background:"var(--navy)",padding:"0 1.5rem",display:"flex",alignItems:"center",justifyContent:"space-between",height:58,position:"sticky",top:0,zIndex:50,borderBottom:"1px solid var(--navy-mid)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span className="serif" style={{color:"var(--gold-light)",fontSize:19,letterSpacing:".01em"}}>Sidecar</span>
+          <span style={{color:"rgba(255,255,255,0.2)",fontSize:14,fontWeight:300}}>/</span>
+          <span style={{color:"rgba(255,255,255,0.5)",fontSize:13}}>Group Sales</span>
+        </div>
+        <nav style={{display:"flex",gap:2}}>
+          {["dashboard","pipeline","contacts","ai"].map(v=>(
+            <button key={v} className={`nav-tab ${view===v?"active":""}`} onClick={()=>setView(v)}>
+              {v==="dashboard"?"Home":v==="pipeline"?"Pipeline":v==="contacts"?"Contacts":"AI Agent"}
+            </button>
+          ))}
+        </nav>
+        <button className="btn btn-gold" style={{fontSize:12,padding:"6px 14px"}} onClick={()=>openNew()}>+ Add contact</button>
+      </header>
+
+      <main style={{padding:"1.75rem",maxWidth:1140,margin:"0 auto"}}>
+
+        {/* DASHBOARD */}
+        {view==="dashboard" && (
+          <div>
+            <div style={{marginBottom:"1.75rem"}}>
+              <h1 className="serif" style={{fontSize:28,fontWeight:400,color:"var(--navy)"}}>Good morning, Christian.</h1>
+              <p style={{fontSize:14,color:"var(--text-muted)",marginTop:3}}>Here's where your group sales pipeline stands today.</p>
+            </div>
+
+            {/* Stats row */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:"1.5rem"}}>
+              <div className="stat-card">
+                <div className="stat-num">{stats.total}</div>
+                <div className="stat-label">Active contacts</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-num">{stats.leads}</div>
+                <div className="stat-label">New leads</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-num">{stats.hot}</div>
+                <div className="stat-label">In progress</div>
+              </div>
+              <div className="stat-card" style={{borderColor:stats.booked>0?"var(--gold)":"var(--cream-mid)"}}>
+                <div className="stat-num" style={{color:stats.booked>0?"var(--gold)":"var(--navy)"}}>{stats.booked}</div>
+                <div className="stat-label">Booked</div>
+              </div>
+              <div className="stat-card" style={{borderColor:stats.overdue>0?"#FECACA":"var(--cream-mid)"}}>
+                <div className="stat-num" style={{color:stats.overdue>0?"#EF4444":"var(--navy)"}}>{stats.overdue}</div>
+                <div className="stat-label">Overdue</div>
+              </div>
+            </div>
+
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1.25rem",marginBottom:"1.5rem"}}>
+              <WeeklyGoalBar contacts={contacts}/>
+              <div className="stat-card">
+                <div className="stat-label" style={{marginBottom:6}}>Pipeline value</div>
+                <div className="stat-num" style={{fontSize:28}}>
+                  {stats.pipeline>0 ? "$"+Math.round(stats.pipeline).toLocaleString() : "—"}
+                </div>
+                <div style={{fontSize:11,color:"var(--text-muted)",marginTop:4}}>Estimated contract value in active deals</div>
+              </div>
+            </div>
+
+            {/* Overdue + upcoming follow-ups */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1.25rem"}}>
+              <div>
+                <div className="section-head">Needs attention</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {contacts.filter(c=>{
+                    if(c.stage==="Dead"||c.stage==="Booked") return false;
+                    const d=daysAgo(c.lastContact); return d===null||d>7;
+                  }).slice(0,5).map(c=>(
+                    <div key={c.id} className="detail-panel" style={{cursor:"pointer",padding:"12px 14px"}} onClick={()=>setSel(c)}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div>
+                          <div style={{fontSize:13,fontWeight:500,color:"var(--navy)"}}>{c.name}</div>
+                          <div style={{fontSize:12,color:"var(--text-muted)"}}>{c.company}</div>
+                        </div>
+                        <span className="stage-pill" style={{background:STAGE_COLORS[c.stage]+"22",color:STAGE_COLORS[c.stage]}}>{c.stage}</span>
+                      </div>
+                      <div style={{marginTop:6,fontSize:11,color:"#EF4444"}}>
+                        {daysAgo(c.lastContact)===null ? "Never contacted" : `Last contact ${daysAgo(c.lastContact)} days ago`}
+                      </div>
+                    </div>
+                  ))}
+                  {stats.overdue===0&&<div style={{fontSize:13,color:"var(--text-muted)",padding:"12px 0"}}>All contacts up to date.</div>}
+                </div>
+              </div>
+              <div>
+                <div className="section-head">Follow-ups due soon</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {contacts.filter(c=>{
+                    if(!c.followUpDate) return false;
+                    const diff=(new Date(c.followUpDate)-Date.now())/86400000;
+                    return diff>=-1&&diff<=7;
+                  }).slice(0,5).map(c=>(
+                    <div key={c.id} className="detail-panel" style={{cursor:"pointer",padding:"12px 14px"}} onClick={()=>setSel(c)}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                        <div>
+                          <div style={{fontSize:13,fontWeight:500,color:"var(--navy)"}}>{c.name}</div>
+                          <div style={{fontSize:12,color:"var(--text-muted)"}}>{c.company}</div>
+                        </div>
+                        <span style={{fontSize:11,background:"var(--gold-pale)",color:"#7A5C10",padding:"3px 8px",borderRadius:5,fontWeight:500,border:"1px solid var(--gold-border)"}}>{c.followUpDate}</span>
+                      </div>
+                      {c.nextAction&&<div style={{marginTop:5,fontSize:12,color:"var(--text-mid)"}}>{c.nextAction}</div>}
+                    </div>
+                  ))}
+                  {contacts.filter(c=>{if(!c.followUpDate)return false;const diff=(new Date(c.followUpDate)-Date.now())/86400000;return diff>=-1&&diff<=7;}).length===0&&(
+                    <div style={{fontSize:13,color:"var(--text-muted)",padding:"12px 0"}}>No follow-ups due. Add dates to your contacts.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* PIPELINE KANBAN */}
+        {view==="pipeline" && (
+          <div>
+            <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:"1.5rem"}}>
+              <div>
+                <h1 className="serif" style={{fontSize:26,fontWeight:400,color:"var(--navy)"}}>Sales pipeline</h1>
+                <p style={{fontSize:13,color:"var(--text-muted)",marginTop:2}}>Click a card to view details or move stages</p>
+              </div>
+            </div>
+            <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:12}}>
+              {STAGES.filter(s=>s!=="Dead").map(stage=>{
+                const sc = contacts.filter(c=>c.stage===stage);
+                return (
+                  <div key={stage} className="kanban-col">
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{width:8,height:8,borderRadius:"50%",background:STAGE_COLORS[stage],display:"inline-block"}}/>
+                        <span style={{fontSize:11,fontWeight:500,color:"var(--text-mid)",textTransform:"uppercase",letterSpacing:".06em"}}>{stage}</span>
+                      </div>
+                      <span style={{fontSize:11,background:"var(--cream-mid)",color:"var(--text-muted)",borderRadius:99,padding:"2px 7px"}}>{sc.length}</span>
+                    </div>
+                    {sc.map(c=>(
+                      <div key={c.id} className="kanban-card" onClick={()=>setSel(c)}>
+                        <div style={{fontSize:13,fontWeight:500,color:"var(--navy)",marginBottom:2}}>{c.name}</div>
+                        <div style={{fontSize:12,color:"var(--text-muted)",marginBottom:6}}>{c.company}</div>
+                        <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:c.nextAction?6:0}}>
+                          <span className="tag">{c.groupType}</span>
+                          {(c.properties||[]).slice(0,2).map(p=>(
+                            <span key={p} className="tag gold-tag">{p}</span>
+                          ))}
+                          {(c.properties||[]).length>2&&<span className="tag">+{(c.properties||[]).length-2}</span>}
+                        </div>
+                        {c.estimatedRooms&&<div style={{fontSize:11,color:"var(--text-muted)",marginBottom:4}}>{c.estimatedRooms} rooms</div>}
+                        {c.nextAction&&<div style={{fontSize:11,color:"var(--gold)",borderLeft:"2px solid var(--gold-border)",paddingLeft:6,lineHeight:1.4}}>{c.nextAction}</div>}
+                        {c.followUpDate&&<div style={{fontSize:10,color:"var(--text-muted)",marginTop:4}}>Follow up: {c.followUpDate}</div>}
+                      </div>
+                    ))}
+                    <button className="btn btn-ghost" style={{width:"100%",marginTop:4,fontSize:12,color:"var(--text-muted)"}}
+                      onClick={()=>openNew(stage)}>+ Add</button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* CONTACTS TABLE */}
+        {view==="contacts" && (
+          <div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"1.25rem"}}>
+              <h1 className="serif" style={{fontSize:26,fontWeight:400,color:"var(--navy)"}}>All contacts</h1>
+            </div>
+            <div style={{display:"flex",gap:8,marginBottom:"1rem",flexWrap:"wrap"}}>
+              <input type="text" placeholder="Search name, company, group type..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:"1 1 220px",minWidth:0}}/>
+              <select value={filterStage} onChange={e=>setFilterStage(e.target.value)} style={{width:"auto",minWidth:150}}>
+                <option value="All">All stages</option>
+                {STAGES.map(s=><option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div style={{background:"var(--white)",border:"1px solid var(--cream-mid)",borderRadius:12,overflow:"hidden"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",tableLayout:"fixed"}}>
+                <thead>
+                  <tr style={{background:"var(--cream-dark)",borderBottom:"1px solid var(--cream-mid)"}}>
+                    {["Name & title","Company","Group type","Properties","Stage","Follow-up","Rooms"].map(h=>(
+                      <th key={h} style={{textAlign:"left",padding:"10px 14px",fontSize:10,fontWeight:500,color:"var(--text-muted)",textTransform:"uppercase",letterSpacing:".06em"}} className={["Follow-up","Rooms"].includes(h)?"hide-mobile":""}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(c=>(
+                    <tr key={c.id} className="contact-row" style={{borderBottom:"1px solid var(--cream-dark)"}} onClick={()=>setSel(c)}>
+                      <td style={{padding:"11px 14px"}}><div style={{fontSize:13,fontWeight:500,color:"var(--navy)"}}>{c.name}</div><div style={{fontSize:11,color:"var(--text-muted)"}}>{c.title}</div></td>
+                      <td style={{padding:"11px 14px",fontSize:13,color:"var(--text-mid)"}}>{c.company}</td>
+                      <td style={{padding:"11px 14px",fontSize:12,color:"var(--text-mid)"}}>{c.groupType}</td>
+                      <td style={{padding:"11px 14px"}}>
+                        <div style={{display:"flex",flexWrap:"wrap",gap:3}}>
+                          {(c.properties||[]).map(p=><span key={p} className="tag gold-tag" style={{fontSize:10,padding:"2px 6px"}}>{p}</span>)}
+                        </div>
+                      </td>
+                      <td style={{padding:"11px 14px"}}><span className="stage-pill" style={{background:STAGE_COLORS[c.stage]+"22",color:STAGE_COLORS[c.stage]}}>{c.stage}</span></td>
+                      <td style={{padding:"11px 14px",fontSize:12,color:"var(--text-muted)"}} className="hide-mobile">{c.followUpDate||"—"}</td>
+                      <td style={{padding:"11px 14px",fontSize:12,color:"var(--text-muted)"}} className="hide-mobile">{c.estimatedRooms||"—"}</td>
+                    </tr>
+                  ))}
+                  {filtered.length===0&&(
+                    <tr><td colSpan={7} style={{textAlign:"center",padding:"2.5rem",color:"var(--text-muted)",fontSize:13}}>No contacts found. Add your first one using the button above.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* AI AGENT */}
+        {view==="ai" && (
+          <div>
+            <div style={{marginBottom:"1.5rem"}}>
+              <h1 className="serif" style={{fontSize:26,fontWeight:400,color:"var(--navy)"}}>AI sales agent</h1>
+              <p style={{fontSize:13,color:"var(--text-muted)",marginTop:3}}>Daily briefing, follow-up emails, and custom call pitches — all based on your live pipeline.</p>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:"1.5rem"}}>
+              <div className="detail-panel" style={{cursor:"pointer",border:aiMode==="briefing"?"1.5px solid var(--gold)":"1px solid var(--cream-mid)"}}
+                onClick={()=>callAI("briefing",null)}>
+                <div style={{fontSize:22,marginBottom:8}}>📋</div>
+                <div style={{fontSize:15,fontWeight:500,color:"var(--navy)",marginBottom:4}}>Get today's briefing</div>
+                <div style={{fontSize:13,color:"var(--text-muted)"}}>Top 3 actions, who to call, what to say — based on your live pipeline right now</div>
+              </div>
+              <div className="detail-panel">
+                <div style={{fontSize:22,marginBottom:8}}>✉️</div>
+                <div style={{fontSize:15,fontWeight:500,color:"var(--navy)",marginBottom:4}}>Draft email or pitch</div>
+                <div style={{fontSize:13,color:"var(--text-muted)"}}>Click any contact below to generate a tailored follow-up email or cold call script</div>
+              </div>
+            </div>
+
+            <div className="section-head">Your active contacts</div>
+            <div style={{display:"grid",gap:8,marginBottom:"1.5rem"}}>
+              {contacts.filter(c=>c.stage!=="Dead").map(c=>(
+                <div key={c.id} style={{background:"var(--white)",border:"1px solid var(--cream-mid)",borderRadius:9,padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+                    <div>
+                      <span style={{fontSize:13,fontWeight:500,color:"var(--navy)"}}>{c.name}</span>
+                      <span style={{fontSize:12,color:"var(--text-muted)",marginLeft:8}}>{c.company}</span>
+                    </div>
+                    <span className="stage-pill" style={{background:STAGE_COLORS[c.stage]+"22",color:STAGE_COLORS[c.stage]}}>{c.stage}</span>
+                    {(c.properties||[]).slice(0,2).map(p=><span key={p} className="tag gold-tag" style={{fontSize:10,padding:"2px 6px"}}>{p}</span>)}
+                  </div>
+                  <div style={{display:"flex",gap:6}}>
+                    <button className="btn btn-outline" style={{fontSize:12,padding:"5px 12px"}} onClick={()=>callAI("email",c)}>Draft email</button>
+                    <button className="btn btn-ghost" style={{fontSize:12}} onClick={()=>callAI("pitch",c)}>Call pitch</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {(aiLoading||aiOut) && (
+              <div style={{background:"var(--white)",border:"1px solid var(--cream-mid)",borderRadius:12,padding:"1.5rem"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"1rem"}}>
+                  <div style={{fontSize:12,fontWeight:500,color:"var(--text-muted)",textTransform:"uppercase",letterSpacing:".06em"}}>
+                    {aiMode==="briefing"?"Daily briefing":aiMode==="email"?"Follow-up email":"Call pitch"}
+                  </div>
+                  {aiOut&&<button className="copy-btn" onClick={()=>navigator.clipboard.writeText(aiOut)}>Copy</button>}
+                </div>
+                {aiLoading
+                  ? <div style={{color:"var(--text-muted)",fontSize:13,display:"flex",alignItems:"center",gap:8}}><span style={{display:"inline-block",animation:"spin 1s linear infinite"}}>◌</span> Generating...</div>
+                  : <div className="ai-output">{aiOut}</div>
+                }
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* CONTACT DETAIL MODAL */}
+      {sel && (
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setSel(null)}>
+          <div className="modal" style={{maxWidth:600}}>
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:"1.25rem"}}>
+              <div>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                  <span className="stage-pill" style={{background:STAGE_COLORS[sel.stage]+"22",color:STAGE_COLORS[sel.stage]}}>{sel.stage}</span>
+                  <span className="tag">{sel.groupType}</span>
+                </div>
+                <h2 className="serif" style={{fontSize:22,fontWeight:400,color:"var(--navy)"}}>{sel.name}</h2>
+                <div style={{fontSize:13,color:"var(--text-muted)"}}>{sel.title}{sel.title&&sel.company?" · ":""}{sel.company}</div>
+              </div>
+              <button className="btn btn-ghost" onClick={()=>setSel(null)} style={{fontSize:20,lineHeight:1,padding:"4px 8px",flexShrink:0}}>×</button>
+            </div>
+
+            {/* Properties */}
+            {(sel.properties||[]).length>0&&(
+              <div style={{marginBottom:"1rem"}}>
+                <div className="section-head">Interested properties</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                  {sel.properties.map(p=><span key={p} className="tag gold-tag">{p}</span>)}
+                </div>
+              </div>
+            )}
+
+            {/* Contact info */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:"1rem"}}>
+              {sel.email&&<div style={{fontSize:13}}><span style={{color:"var(--text-muted)"}}>Email</span><br/><a href={`mailto:${sel.email}`} style={{color:"var(--gold)",textDecoration:"none",fontWeight:500}}>{sel.email}</a></div>}
+              {sel.phone&&<div style={{fontSize:13}}><span style={{color:"var(--text-muted)"}}>Phone</span><br/><a href={`tel:${sel.phone}`} style={{color:"var(--gold)",textDecoration:"none",fontWeight:500}}>{sel.phone}</a></div>}
+              {sel.estimatedRooms&&<div style={{fontSize:13}}><span style={{color:"var(--text-muted)"}}>Est. rooms</span><br/><span style={{fontWeight:500}}>{sel.estimatedRooms}</span></div>}
+              {sel.contractValue&&<div style={{fontSize:13}}><span style={{color:"var(--text-muted)"}}>Contract value</span><br/><span style={{fontWeight:500,color:"var(--gold)"}}>{fmt$(sel.contractValue)}</span></div>}
+              {sel.source&&<div style={{fontSize:13}}><span style={{color:"var(--text-muted)"}}>Source</span><br/><span>{sel.source}</span></div>}
+              {sel.lastContact&&<div style={{fontSize:13}}><span style={{color:"var(--text-muted)"}}>Last contact</span><br/><span>{sel.lastContact} {daysAgo(sel.lastContact)!==null?`(${daysAgo(sel.lastContact)}d ago)`:""}</span></div>}
+              {sel.followUpDate&&<div style={{fontSize:13}}><span style={{color:"var(--text-muted)"}}>Follow-up date</span><br/><span style={{fontWeight:500,color:"var(--gold)"}}>{sel.followUpDate}</span></div>}
+            </div>
+
+            {sel.notes&&<div style={{background:"var(--cream-dark)",borderRadius:7,padding:"10px 12px",marginBottom:"1rem",fontSize:13,color:"var(--text-mid)",lineHeight:1.65,borderLeft:"3px solid var(--cream-mid)"}}>{sel.notes}</div>}
+            {sel.nextAction&&<div style={{borderLeft:"3px solid var(--gold)",paddingLeft:12,marginBottom:"1rem"}}><div style={{fontSize:10,color:"var(--gold)",fontWeight:500,textTransform:"uppercase",letterSpacing:".06em",marginBottom:3}}>Next action</div><div style={{fontSize:13,color:"var(--navy)"}}>{sel.nextAction}</div></div>}
+
+            {/* Move stage */}
+            <div style={{marginBottom:"1.25rem"}}>
+              <div className="section-head">Move stage</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {STAGES.map(s=>(
+                  <button key={s} className="btn" onClick={()=>moveStage(sel.id,s)}
+                    style={{fontSize:12,padding:"5px 12px",background:sel.stage===s?STAGE_COLORS[s]:"transparent",color:sel.stage===s?"#fff":"var(--text-mid)",border:`1px solid ${sel.stage===s?STAGE_COLORS[s]:"var(--cream-mid)"}`}}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",borderTop:"1px solid var(--cream-mid)",paddingTop:"1rem"}}>
+              <button className="btn btn-primary" onClick={()=>{setEditing({...sel});setShowForm(true);setSel(null);}}>Edit contact</button>
+              <button className="btn btn-outline" onClick={()=>{callAI("email",sel);setView("ai");setSel(null);}}>Draft email</button>
+              <button className="btn btn-ghost" style={{fontSize:12}} onClick={()=>{callAI("pitch",sel);setView("ai");setSel(null);}}>Call pitch</button>
+              <button className="btn btn-ghost" style={{marginLeft:"auto",color:"var(--danger)",fontSize:12}} onClick={()=>{if(window.confirm("Delete "+sel.name+"?"))del(sel.id);}}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ADD / EDIT FORM */}
+      {showForm&&editing&&(
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setShowForm(false)}>
+          <div className="modal">
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"1.25rem"}}>
+              <h2 className="serif" style={{fontSize:20,fontWeight:400,color:"var(--navy)"}}>{editing.id?"Edit contact":"New contact"}</h2>
+              <button className="btn btn-ghost" onClick={()=>setShowForm(false)} style={{fontSize:20,padding:"4px 8px"}}>×</button>
+            </div>
+
+            <div className="form-row">
+              <div><label>Full name *</label><input type="text" value={editing.name} onChange={e=>setEditing(p=>({...p,name:e.target.value}))}/></div>
+              <div><label>Title</label><input type="text" value={editing.title} onChange={e=>setEditing(p=>({...p,title:e.target.value}))}/></div>
+            </div>
+            <div className="form-full"><label>Company / Organization</label><input type="text" value={editing.company} onChange={e=>setEditing(p=>({...p,company:e.target.value}))}/></div>
+            <div className="form-row">
+              <div><label>Email</label><input type="email" value={editing.email} onChange={e=>setEditing(p=>({...p,email:e.target.value}))}/></div>
+              <div><label>Phone</label><input type="tel" value={editing.phone} onChange={e=>setEditing(p=>({...p,phone:e.target.value}))}/></div>
+            </div>
+
+            <div className="form-full">
+              <label>Properties interested in — select all that apply</label>
+              <PropertyToggle values={editing.properties||[]} onChange={v=>setEditing(p=>({...p,properties:v}))}/>
+            </div>
+
+            <div className="form-row">
+              <div><label>Group type</label>
+                <select value={editing.groupType} onChange={e=>setEditing(p=>({...p,groupType:e.target.value}))}>
+                  {GROUP_TYPES.map(g=><option key={g}>{g}</option>)}
+                </select>
+              </div>
+              <div><label>Stage</label>
+                <select value={editing.stage} onChange={e=>setEditing(p=>({...p,stage:e.target.value}))}>
+                  {STAGES.map(s=><option key={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div><label>Est. rooms needed</label><input type="text" placeholder="e.g. 10-25" value={editing.estimatedRooms} onChange={e=>setEditing(p=>({...p,estimatedRooms:e.target.value}))}/></div>
+              <div><label>Contract value ($)</label><input type="text" placeholder="e.g. 8500" value={editing.contractValue} onChange={e=>setEditing(p=>({...p,contractValue:e.target.value}))}/></div>
+            </div>
+
+            <div className="form-row">
+              <div><label>Source</label>
+                <select value={editing.source} onChange={e=>setEditing(p=>({...p,source:e.target.value}))}>
+                  <option value="">Select source...</option>
+                  {SOURCES.map(s=><option key={s}>{s}</option>)}
+                </select>
+              </div>
+              <div><label>Last contact date</label><input type="text" placeholder="2026-05-27" value={editing.lastContact} onChange={e=>setEditing(p=>({...p,lastContact:e.target.value}))}/></div>
+            </div>
+
+            <div className="form-row">
+              <div><label>Follow-up date</label><input type="text" placeholder="2026-06-03" value={editing.followUpDate} onChange={e=>setEditing(p=>({...p,followUpDate:e.target.value}))}/></div>
+              <div style={{display:"flex",alignItems:"flex-end"}}><div style={{fontSize:11,color:"var(--text-muted)",lineHeight:1.5}}>Set a reminder date so the dashboard flags this contact when it's time to reach back out.</div></div>
+            </div>
+
+            <div className="form-full"><label>Next action</label><input type="text" placeholder="e.g. Call Thursday — ask about room block size" value={editing.nextAction} onChange={e=>setEditing(p=>({...p,nextAction:e.target.value}))}/></div>
+            <div className="form-full"><label>Notes</label><textarea value={editing.notes} onChange={e=>setEditing(p=>({...p,notes:e.target.value}))} placeholder="Event details, timeline, group size, special requirements..."/></div>
+
+            <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:".5rem"}}>
+              <button className="btn btn-outline" onClick={()=>setShowForm(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={()=>save(editing)} disabled={!editing.name.trim()}>Save contact</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
