@@ -185,7 +185,7 @@ function WeeklyGoalBar({contacts}) {
 }
 
 function App() {
-  const [contacts, setContacts] = useState(load);
+  const [contacts, setContacts] = useState(() => load());
   const [view, setView] = useState("dashboard");
   const [sel, setSel] = useState(null);
   const [editing, setEditing] = useState(null);
