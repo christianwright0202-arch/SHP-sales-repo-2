@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sidecar Sales Hub</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%}
+body{font-family:'DM Sans',sans-serif;background:#FAFAF8;color:#1a1a18;-webkit-font-smoothing:antialiased}
+input,textarea,select,button{font-family:'DM Sans',sans-serif}
+input:focus,textarea:focus,select:focus{outline:none;border-color:#8B7355!important;box-shadow:0 0 0 2px rgba(139,115,85,0.15)}
+button:focus{outline:none}
+.serif{font-family:'DM Serif Display',serif}
+.btn{cursor:pointer;font-size:13px;font-weight:500;border-radius:6px;border:none;padding:8px 16px;transition:all .15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:#2C2C2A;color:#fff}
+.btn-primary:hover{background:#1a1a18}
+.btn-primary:disabled{background:#888;cursor:not-allowed}
+.btn-outline{background:transparent;color:#2C2C2A;border:1px solid #D1CFC4}
+.btn-outline:hover{background:#F1EFE8}
+.btn-ghost{background:transparent;color:#888780;border:none;padding:6px 10px}
+.btn-ghost:hover{background:#F1EFE8;color:#2C2C2A}
+.nav-tab{cursor:pointer;font-size:13px;font-weight:500;padding:8px 16px;border-radius:6px;color:#B4B2A9;transition:all .15s;border:none;background:transparent}
+.nav-tab.active{background:#F1EFE8;color:#2C2C2A}
+.nav-tab:not(.active):hover{background:rgba(255,255,255,0.1);color:#F1EFE8}
+.contact-row:hover{background:#F5F4EF;cursor:pointer}
+.kanban-col{background:#F5F4EF;border-radius:10px;padding:12px;min-width:170px;flex:1}
+.kanban-card{background:#fff;border:1px solid #E8E6DF;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.kanban-card:hover{border-color:#8B7355;transform:translateY(-1px)}
+.stage-pill{display:inline-block;font-size:11px;font-weight:500;padding:3px 10px;border-radius:99px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.modal{background:#FAFAF8;border-radius:12px;padding:1.5rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.stat-card{background:#fff;border:1px solid #E8E6DF;border-radius:10px;padding:1rem 1.25rem}
+.stat-num{font-family:'DM Serif Display',serif;font-size:32px;color:#2C2C2A;line-height:1}
+.stat-label{font-size:12px;color:#888780;margin-top:4px;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+label{font-size:12px;font-weight:500;color:#5F5E5A;display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+input[type=text],input[type=email],input[type=tel],textarea,select{width:100%;background:#fff;border:1px solid #D1CFC4;border-radius:6px;padding:8px 10px;font-size:13px;color:#2C2C2A}
+textarea{resize:vertical;min-height:70px}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-full{margin-bottom:12px}
+.ai-output{white-space:pre-wrap;font-size:13px;line-height:1.75;color:#2C2C2A}
+.copy-btn{cursor:pointer;font-size:11px;padding:4px 10px;background:#F1EFE8;color:#5F5E5A;border:1px solid #D1CFC4;border-radius:4px}
+.copy-btn:hover{background:#E8E6DF}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}.kanban-col{min-width:140px}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+const STAGES = ["Lead","Contacted","Proposal Sent","Negotiating","Booked","Dead"];
+const STAGE_COLORS = {"Lead":"#6B7280","Contacted":"#3B82F6","Proposal Sent":"#8B5CF6","Negotiating":"#F59E0B","Booked":"#10B981","Dead":"#EF4444"};
+const GROUP_TYPES = ["Sports team","Convention","Wedding block","Corporate","Relocation","Other"];
+const PROPERTIES = ["Hotel SOMA","The Ryan","The Rambler Inn","Multiple"];
+const STORAGE_KEY = "sidecar_crm_v2";
+
+const EMPTY = {id:null,name:"",title:"",company:"",email:"",phone:"",groupType:"Convention",property:"Hotel SOMA",stage:"Lead",notes:"",source:"",lastContact:"",nextAction:"",estimatedRooms:""};
+
+function load() {
+  try { const s = localStorage.getItem(STORAGE_KEY); if(s) return JSON.parse(s); } catch{}
+  return [{id:1,name:"Sample Contact",title:"Event Coordinator",company:"Fort Worth CVB",email:"events@visitfortworth.com",phone:"817-336-8791",groupType:"Convention",property:"Hotel SOMA",stage:"Lead",notes:"Found via CVB website. They coordinate group housing referrals.",source:"CVB website",lastContact:"",nextAction:"Call to introduce Sidecar as lodging partner",estimatedRooms:"20-50"}];
+}
+
+function App() {
+  const [contacts, setContacts] = useState(load);
+  const [view, setView] = useState("pipeline");
+  const [sel, setSel] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [aiOut, setAiOut] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiMode, setAiMode] = useState(null);
+  const [filterStage, setFilterStage] = useState("All");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts)); } catch{} }, [contacts]);
+
+  const save = (c) => {
+    if (c.id) { setContacts(p => p.map(x => x.id===c.id ? c : x)); }
+    else { const n={...c,id:Date.now()}; setContacts(p=>[...p,n]); }
+    setShowForm(false); setEditing(null);
+  };
+
+  const del = (id) => { setContacts(p=>p.filter(x=>x.id!==id)); setSel(null); };
+
+  const moveStage = (id, stage) => {
+    setContacts(p=>p.map(x=>x.id===id?{...x,stage,lastContact:new Date().toISOString().split("T")[0]}:x));
+    if(sel?.id===id) setSel(p=>({...p,stage}));
+  };
+
+  const callAI = useCallback(async (mode, contact) => {
+    setAiMode(mode); setAiLoading(true); setAiOut("");
+    const today = new Date().toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+    let prompt = "";
+    if (mode==="briefing") {
+      const actionable = contacts.filter(c=>c.stage!=="Dead"&&c.stage!=="Booked");
+      const overdue = actionable.filter(c=>{ if(!c.lastContact) return true; const diff=(Date.now()-new Date(c.lastContact))/(86400000); return diff>7; });
+      prompt = `You are a sales coach for Christian Wright, 24, Revenue & Operations Manager in Fort Worth TX. He runs Hotel SOMA (31-unit boutique STR), The Ryan (Arlington), and The Rambler Inn. Building a convention/group sales pipeline. Today: ${today}. He has 1-2 hrs/week for sales. Email: christian@sidecarsuites.com.\n\nPipeline:\n${JSON.stringify(contacts,null,2)}\n\nOverdue (7+ days no contact): ${overdue.map(c=>c.name+" at "+c.company).join(", ")||"none"}\n\nGive a focused daily briefing: 1) Top 3 specific actions TODAY (name exact contacts, what to say). 2) One sentence encouragement. 3) One pipeline health observation. Be direct, brief, use real names. Write like a sharp sales coach texting him.`;
+    } else if (mode==="email"&&contact) {
+      prompt = `Draft a follow-up email for Christian Wright (christian@sidecarsuites.com) at Sidecar Suites Fort Worth.\n\nContact: ${contact.name}, ${contact.title} at ${contact.company}\nGroup type: ${contact.groupType}\nStage: ${contact.stage}\nNotes: ${contact.notes||"none"}\nNext action: ${contact.nextAction||"none"}\nProperty: ${contact.property}\n\nWrite a short warm professional follow-up. Subject line + body. Under 150 words. Sound human not corporate. Mention the property by name. End with a clear low-friction ask. Do NOT say "I hope this email finds you well." Sign as Christian Wright, Sidecar Suites, 817-xxx-xxxx.`;
+    } else if (mode==="pitch"&&contact) {
+      prompt = `Christian Wright runs Hotel SOMA (31-unit boutique STR Fort Worth), The Ryan (Arlington near Globe Life Field), The Rambler Inn — boutique STR portfolio offering group room blocks. Cold calling ${contact.name}, ${contact.title} at ${contact.company}. Group type: ${contact.groupType}.\n\nWrite a 30-second phone pitch tailored to this person. Opening line, hook, closing ask. Sound like a real human not a script. 4-6 sentences max. Include one specific detail about the most relevant DFW property.`;
+    }
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+      const data = await res.json();
+      setAiOut(data.content?.filter(b=>b.type==="text").map(b=>b.text).join("\n")||"No response.");
+    } catch(e) { setAiOut("Error: "+e.message); }
+    setAiLoading(false);
+  }, [contacts]);
+
+  const filtered = contacts.filter(c=>{
+    const ms = filterStage==="All"||c.stage===filterStage;
+    const q = search.toLowerCase();
+    const mq = !q||c.name.toLowerCase().includes(q)||c.company.toLowerCase().includes(q)||c.groupType.toLowerCase().includes(q);
+    return ms&&mq;
+  });
+
+  const stats = { total:contacts.filter(c=>c.stage!=="Dead").length, booked:contacts.filter(c=>c.stage==="Booked").length, hot:contacts.filter(c=>["Contacted","Proposal Sent","Negotiating"].includes(c.stage)).length, leads:contacts.filter(c=>c.stage==="Lead").length };
+
+  return (
+    <div style={{minHeight:"100vh",background:"#FAFAF8"}}>
+      <header style={{background:"#2C2C2A",padding:"0 1.5rem",display:"flex",alignItems:"center",justifyContent:"space-between",height:56,position:"sticky",top:0,zIndex:50}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span className="serif" style={{color:"#F1EFE8",fontSize:18}}>Sidecar</span>
+          <span style={{color:"#5F5E5A",fontSize:13}}>/</span>
+          <span style={{color:"#888780",fontSize:13}}>Group Sales</span>
+        </div>
+        <div style={{display:"flex",gap:4}}>
+          {["pipeline","contacts","ai"].map(v=>(
+            <button key={v} className={`nav-tab ${view===v?"active":""}`} onClick={()=>setView(v)}>
+              {v==="pipeline"?"Pipeline":v==="contacts"?"Contacts":"AI Agent"}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <main style={{padding:"1.5rem",maxWidth:1100,margin:"0 auto"}}>
+
+        {view==="pipeline" && (
+          <div>
+            <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:"1.5rem"}}>
+              <div>
+                <h1 className="serif" style={{fontSize:26,fontWeight:400}}>Sales pipeline</h1>
+                <p style={{fontSize:13,color:"#888780",marginTop:2}}>Move contacts through stages as deals progress</p>
+              </div>
+              <button className="btn btn-primary" onClick={()=>{setEditing({...EMPTY});setShowForm(true);}}>+ Add contact</button>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:"1.5rem"}}>
+              <div className="stat-card"><div className="stat-num">{stats.total}</div><div className="stat-label">Active</div></div>
+              <div className="stat-card"><div className="stat-num">{stats.leads}</div><div className="stat-label">New leads</div></div>
+              <div className="stat-card"><div className="stat-num">{stats.hot}</div><div className="stat-label">In progress</div></div>
+              <div className="stat-card" style={{borderColor:"#10B981"}}><div className="stat-num" style={{color:"#10B981"}}>{stats.booked}</div><div className="stat-label">Booked</div></div>
+            </div>
+            <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:8}}>
+              {STAGES.filter(s=>s!=="Dead").map(stage=>{
+                const sc = contacts.filter(c=>c.stage===stage);
+                return (
+                  <div key={stage} className="kanban-col">
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                      <span style={{fontSize:11,fontWeight:500,color:"#5F5E5A",textTransform:"uppercase",letterSpacing:".06em"}}>{stage}</span>
+                      <span style={{fontSize:11,background:"#E8E6DF",color:"#888780",borderRadius:99,padding:"2px 7px"}}>{sc.length}</span>
+                    </div>
+                    {sc.map(c=>(
+                      <div key={c.id} className="kanban-card" onClick={()=>setSel(c)}>
+                        <div style={{fontSize:13,fontWeight:500,color:"#2C2C2A",marginBottom:2}}>{c.name}</div>
+                        <div style={{fontSize:12,color:"#888780"}}>{c.company}</div>
+                        <div style={{marginTop:6,display:"flex",gap:4,flexWrap:"wrap"}}>
+                          <span style={{fontSize:11,background:"#F1EFE8",color:"#5F5E5A",padding:"2px 7px",borderRadius:4}}>{c.groupType}</span>
+                          <span style={{fontSize:11,background:"#F1EFE8",color:"#5F5E5A",padding:"2px 7px",borderRadius:4}}>{c.property}</span>
+                        </div>
+                        {c.nextAction&&<div style={{marginTop:6,fontSize:11,color:"#8B7355",borderLeft:"2px solid #D1CFC4",paddingLeft:6}}>{c.nextAction}</div>}
+                      </div>
+                    ))}
+                    <button className="btn btn-ghost" style={{width:"100%",marginTop:4,fontSize:12}} onClick={()=>{setEditing({...EMPTY,stage});setShowForm(true);}}>+ Add</button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {view==="contacts" && (
+          <div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"1.25rem"}}>
+              <h1 className="serif" style={{fontSize:26,fontWeight:400}}>All contacts</h1>
+              <button className="btn btn-primary" onClick={()=>{setEditing({...EMPTY});setShowForm(true);}}>+ Add contact</button>
+            </div>
+            <div style={{display:"flex",gap:8,marginBottom:"1rem",flexWrap:"wrap"}}>
+              <input type="text" placeholder="Search name, company..." value={search} onChange={e=>setSearch(e.target.value)} style={{flex:"1 1 200px",minWidth:0}}/>
+              <select value={filterStage} onChange={e=>setFilterStage(e.target.value)} style={{width:"auto",minWidth:140}}>
+                <option value="All">All stages</option>
+                {STAGES.map(s=><option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div style={{background:"#fff",border:"1px solid #E8E6DF",borderRadius:10,overflow:"hidden"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",tableLayout:"fixed"}}>
+                <thead>
+                  <tr style={{background:"#F5F4EF",borderBottom:"1px solid #E8E6DF"}}>
+                    {["Name","Company","Group type","Stage","Next action"].map(h=>(
+                      <th key={h} style={{textAlign:"left",padding:"10px 14px",fontSize:11,fontWeight:500,color:"#888780",textTransform:"uppercase",letterSpacing:".05em"}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(c=>(
+                    <tr key={c.id} className="contact-row" style={{borderBottom:"1px solid #F1EFE8"}} onClick={()=>setSel(c)}>
+                      <td style={{padding:"10px 14px"}}><div style={{fontSize:13,fontWeight:500}}>{c.name}</div><div style={{fontSize:12,color:"#888780"}}>{c.title}</div></td>
+                      <td style={{padding:"10px 14px",fontSize:13,color:"#5F5E5A"}}>{c.company}</td>
+                      <td style={{padding:"10px 14px",fontSize:13,color:"#5F5E5A"}}>{c.groupType}</td>
+                      <td style={{padding:"10px 14px"}}><span className="stage-pill" style={{background:STAGE_COLORS[c.stage]+"22",color:STAGE_COLORS[c.stage]}}>{c.stage}</span></td>
+                      <td style={{padding:"10px 14px",fontSize:12,color:"#8B7355",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.nextAction||"—"}</td>
+                    </tr>
+                  ))}
+                  {filtered.length===0&&<tr><td colSpan={5} style={{textAlign:"center",padding:"2rem",color:"#888780",fontSize:13}}>No contacts found.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {view==="ai" && (
+          <div>
+            <h1 className="serif" style={{fontSize:26,fontWeight:400,marginBottom:".25rem"}}>AI sales agent</h1>
+            <p style={{fontSize:13,color:"#888780",marginBottom:"1.5rem"}}>Daily briefing, follow-up emails, and custom call pitches — powered by AI.</p>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:"1.5rem"}}>
+              <div className="stat-card" style={{cursor:"pointer",border:aiMode==="briefing"?"1px solid #8B7355":"1px solid #E8E6DF"}} onClick={()=>callAI("briefing",null)}>
+                <div style={{fontSize:22,marginBottom:8}}>📋</div>
+                <div style={{fontSize:15,fontWeight:500,marginBottom:4}}>Daily briefing</div>
+                <div style={{fontSize:13,color:"#888780"}}>Top 3 actions to take today based on your live pipeline</div>
+              </div>
+              <div className="stat-card">
+                <div style={{fontSize:22,marginBottom:8}}>✉️</div>
+                <div style={{fontSize:15,fontWeight:500,marginBottom:4}}>Follow-up email</div>
+                <div style={{fontSize:13,color:"#888780"}}>Click any contact below to draft a tailored email or call pitch</div>
+              </div>
+            </div>
+            <div style={{display:"grid",gap:8,marginBottom:"1.5rem"}}>
+              <div style={{fontSize:12,fontWeight:500,color:"#5F5E5A",textTransform:"uppercase",letterSpacing:".05em"}}>Your contacts</div>
+              {contacts.filter(c=>c.stage!=="Dead").map(c=>(
+                <div key={c.id} style={{background:"#fff",border:"1px solid #E8E6DF",borderRadius:8,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+                  <div>
+                    <span style={{fontSize:13,fontWeight:500}}>{c.name}</span>
+                    <span style={{fontSize:12,color:"#888780",marginLeft:8}}>{c.company}</span>
+                    <span className="stage-pill" style={{background:STAGE_COLORS[c.stage]+"22",color:STAGE_COLORS[c.stage],marginLeft:8}}>{c.stage}</span>
+                  </div>
+                  <div style={{display:"flex",gap:6}}>
+                    <button className="btn btn-outline" style={{fontSize:12,padding:"5px 12px"}} onClick={()=>callAI("email",c)}>Draft email</button>
+                    <button className="btn btn-ghost" style={{fontSize:12}} onClick={()=>callAI("pitch",c)}>Call pitch</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {(aiLoading||aiOut) && (
+              <div style={{background:"#fff",border:"1px solid #E8E6DF",borderRadius:10,padding:"1.25rem"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"1rem"}}>
+                  <div style={{fontSize:13,fontWeight:500,color:"#5F5E5A",textTransform:"uppercase",letterSpacing:".05em"}}>
+                    {aiMode==="briefing"?"Daily briefing":aiMode==="email"?"Follow-up email":"Call pitch"}
+                  </div>
+                  {aiOut&&<button className="copy-btn" onClick={()=>navigator.clipboard.writeText(aiOut)}>Copy</button>}
+                </div>
+                {aiLoading
+                  ? <div style={{color:"#888780",fontSize:13}}>Generating...</div>
+                  : <div className="ai-output">{aiOut}</div>
+                }
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      {sel && (
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setSel(null)}>
+          <div className="modal">
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:"1.25rem"}}>
+              <div>
+                <h2 className="serif" style={{fontSize:22,fontWeight:400}}>{sel.name}</h2>
+                <div style={{fontSize:13,color:"#888780"}}>{sel.title}{sel.title&&sel.company?" · ":""}{sel.company}</div>
+              </div>
+              <button className="btn btn-ghost" onClick={()=>setSel(null)} style={{fontSize:20,lineHeight:1,padding:"4px 8px"}}>×</button>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:"1rem"}}>
+              {sel.email&&<div style={{fontSize:13}}><span style={{color:"#888780"}}>Email: </span><a href={`mailto:${sel.email}`} style={{color:"#8B7355"}}>{sel.email}</a></div>}
+              {sel.phone&&<div style={{fontSize:13}}><span style={{color:"#888780"}}>Phone: </span><a href={`tel:${sel.phone}`} style={{color:"#8B7355"}}>{sel.phone}</a></div>}
+              {sel.estimatedRooms&&<div style={{fontSize:13}}><span style={{color:"#888780"}}>Rooms: </span>{sel.estimatedRooms}</div>}
+              {sel.source&&<div style={{fontSize:13}}><span style={{color:"#888780"}}>Source: </span>{sel.source}</div>}
+            </div>
+            {sel.notes&&<div style={{background:"#F5F4EF",borderRadius:6,padding:"10px 12px",marginBottom:"1rem",fontSize:13,color:"#5F5E5A",lineHeight:1.6}}>{sel.notes}</div>}
+            {sel.nextAction&&<div style={{borderLeft:"3px solid #8B7355",paddingLeft:12,marginBottom:"1rem"}}><div style={{fontSize:11,color:"#8B7355",fontWeight:500,textTransform:"uppercase",letterSpacing:".05em"}}>Next action</div><div style={{fontSize:13,color:"#2C2C2A"}}>{sel.nextAction}</div></div>}
+            <div style={{marginBottom:"1rem"}}>
+              <div style={{fontSize:12,fontWeight:500,color:"#5F5E5A",textTransform:"uppercase",letterSpacing:".05em",marginBottom:8}}>Move stage</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {STAGES.map(s=>(
+                  <button key={s} className="btn" onClick={()=>moveStage(sel.id,s)} style={{fontSize:12,padding:"5px 12px",background:sel.stage===s?STAGE_COLORS[s]:"transparent",color:sel.stage===s?"#fff":"#5F5E5A",border:`1px solid ${sel.stage===s?STAGE_COLORS[s]:"#D1CFC4"}`}}>{s}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <button className="btn btn-primary" onClick={()=>{setEditing({...sel});setShowForm(true);setSel(null);}}>Edit</button>
+              <button className="btn btn-outline" onClick={()=>{callAI("email",sel);setView("ai");setSel(null);}}>Draft email</button>
+              <button className="btn btn-ghost" style={{marginLeft:"auto",color:"#EF4444"}} onClick={()=>{if(window.confirm("Delete this contact?"))del(sel.id);}}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showForm&&editing&&(
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setShowForm(false)}>
+          <div className="modal">
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"1.25rem"}}>
+              <h2 className="serif" style={{fontSize:20,fontWeight:400}}>{editing.id?"Edit contact":"New contact"}</h2>
+              <button className="btn btn-ghost" onClick={()=>setShowForm(false)} style={{fontSize:20,padding:"4px 8px"}}>×</button>
+            </div>
+            <div className="form-row">
+              <div><label>Full name *</label><input type="text" value={editing.name} onChange={e=>setEditing(p=>({...p,name:e.target.value}))}/></div>
+              <div><label>Title</label><input type="text" value={editing.title} onChange={e=>setEditing(p=>({...p,title:e.target.value}))}/></div>
+            </div>
+            <div className="form-full"><label>Company</label><input type="text" value={editing.company} onChange={e=>setEditing(p=>({...p,company:e.target.value}))}/></div>
+            <div className="form-row">
+              <div><label>Email</label><input type="email" value={editing.email} onChange={e=>setEditing(p=>({...p,email:e.target.value}))}/></div>
+              <div><label>Phone</label><input type="tel" value={editing.phone} onChange={e=>setEditing(p=>({...p,phone:e.target.value}))}/></div>
+            </div>
+            <div className="form-row">
+              <div><label>Group type</label><select value={editing.groupType} onChange={e=>setEditing(p=>({...p,groupType:e.target.value}))}>{GROUP_TYPES.map(g=><option key={g}>{g}</option>)}</select></div>
+              <div><label>Property</label><select value={editing.property} onChange={e=>setEditing(p=>({...p,property:e.target.value}))}>{PROPERTIES.map(pr=><option key={pr}>{pr}</option>)}</select></div>
+            </div>
+            <div className="form-row">
+              <div><label>Stage</label><select value={editing.stage} onChange={e=>setEditing(p=>({...p,stage:e.target.value}))}>{STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
+              <div><label>Est. rooms</label><input type="text" placeholder="e.g. 10-20" value={editing.estimatedRooms} onChange={e=>setEditing(p=>({...p,estimatedRooms:e.target.value}))}/></div>
+            </div>
+            <div className="form-row">
+              <div><label>Source</label><input type="text" placeholder="CVB, LinkedIn, referral..." value={editing.source} onChange={e=>setEditing(p=>({...p,source:e.target.value}))}/></div>
+              <div><label>Last contact</label><input type="text" placeholder="2026-05-27" value={editing.lastContact} onChange={e=>setEditing(p=>({...p,lastContact:e.target.value}))}/></div>
+            </div>
+            <div className="form-full"><label>Next action</label><input type="text" placeholder="e.g. Call Tuesday to follow up" value={editing.nextAction} onChange={e=>setEditing(p=>({...p,nextAction:e.target.value}))}/></div>
+            <div className="form-full"><label>Notes</label><textarea value={editing.notes} onChange={e=>setEditing(p=>({...p,notes:e.target.value}))} placeholder="Event details, timeline, anything relevant..."/></div>
+            <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:".5rem"}}>
+              <button className="btn btn-outline" onClick={()=>setShowForm(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={()=>save(editing)} disabled={!editing.name}>Save contact</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
